@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Open Me</title>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;600&family=Inter:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      background: #f5f0e8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Inter', sans-serif;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ── warm paper texture bg ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 20% 50%, rgba(200, 160, 120, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 30%, rgba(180, 140, 110, 0.06) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    /* ══════════ ENVELOPE SCENE ══════════ */
+    .envelope-scene {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.6rem;
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    .envelope-scene.hidden {
+      opacity: 0;
+      transform: scale(0.95);
+      pointer-events: none;
+      position: absolute;
+    }
+
+    .hint {
+      font-size: 0.85rem;
+      color: #a09080;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      font-weight: 300;
+      animation: pulse 2.5s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
+
+    /* ── the envelope ── */
+    .envelope {
+      width: 280px;
+      height: 180px;
+      position: relative;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+    .envelope:hover { transform: translateY(-4px); }
+
+    .envelope-body {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #e8ddd0 0%, #ddd0c0 100%);
+      border-radius: 4px;
+      box-shadow: 0 8px 30px rgba(120, 90, 60, 0.15), 0 2px 8px rgba(120, 90, 60, 0.1);
+      position: relative;
+      overflow: hidden;
+    }
+    .envelope-body::after {
+      content: '';
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      height: 40%;
+      background: linear-gradient(to top, rgba(0,0,0,0.03), transparent);
+    }
+
+    /* flap */
+    .flap {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 50%;
+      background: linear-gradient(180deg, #d6c8b8 0%, #e0d4c6 100%);
+      clip-path: polygon(0 0, 50% 100%, 100% 0);
+      transform-origin: top center;
+      transition: transform 0.6s ease;
+      z-index: 2;
+    }
+    .envelope:hover .flap {
+      transform: rotateX(20deg);
+    }
+
+    /* inner liner */
+    .liner {
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 50%;
+      background: linear-gradient(180deg, #c9a0a0 0%, #d4b0a8 100%);
+      clip-path: polygon(0 0, 50% 90%, 100% 0);
+      z-index: 1;
+    }
+
+    /* wax seal */
+    .seal {
+      position: absolute;
+      bottom: 25%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 44px;
+      height: 44px;
+      background: radial-gradient(circle at 40% 35%, #c46b6b, #9b4444);
+      border-radius: 50%;
+      z-index: 3;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(150, 60, 60, 0.3);
+    }
+    .seal::after {
+      content: '♥';
+      color: rgba(255, 220, 220, 0.7);
+      font-size: 1.2rem;
+    }
+
+    /* ══════════ LETTER SCENE ══════════ */
+    .letter-scene {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      opacity: 0;
+      transition: opacity 0.8s ease;
+    }
+    .letter-scene.visible {
+      display: flex;
+      opacity: 1;
+    }
+
+    .paper {
+      background: #faf6f0;
+      max-width: 460px;
+      width: 90vw;
+      padding: 2.8rem 2.4rem;
+      border-radius: 3px;
+      box-shadow:
+        0 2px 4px rgba(0,0,0,0.04),
+        0 12px 40px rgba(120, 90, 60, 0.12);
+      position: relative;
+      transform: translateY(20px);
+      animation: slideUp 0.8s ease forwards;
+      animation-delay: 0.3s;
+      opacity: 0;
+    }
+    @keyframes slideUp {
+      to { transform: translateY(0); opacity: 1; }
+    }
+
+    /* faint ruled lines */
+    .paper::before {
+      content: '';
+      position: absolute;
+      inset: 2.4rem;
+      background: repeating-linear-gradient(
+        to bottom,
+        transparent,
+        transparent 31px,
+        rgba(180, 160, 140, 0.15) 31px,
+        rgba(180, 160, 140, 0.15) 32px
+      );
+      pointer-events: none;
+    }
+
+    /* red margin line */
+    .paper::after {
+      content: '';
+      position: absolute;
+      top: 2rem; bottom: 2rem; left: 2rem;
+      width: 1px;
+      background: rgba(200, 120, 120, 0.2);
+      pointer-events: none;
+    }
+
+    .note-line {
+      font-family: 'Caveat', cursive;
+      font-size: 1.45rem;
+      color: #3a3530;
+      line-height: 2;
+      position: relative;
+      z-index: 1;
+    }
+    .note-greeting {
+      color: #9b6060;
+      font-size: 1.6rem;
+      font-weight: 600;
+      margin-bottom: 0.3rem;
+    }
+    .note-question {
+      margin-top: 0.6rem;
+      font-weight: 600;
+      font-size: 1.55rem;
+      color: #9b6060;
+    }
+
+    /* typewriter cursor */
+    .cursor-blink {
+      display: inline-block;
+      width: 2px;
+      height: 1.2em;
+      background: #9b6060;
+      margin-left: 2px;
+      vertical-align: text-bottom;
+      animation: blink 0.7s step-end infinite;
+    }
+    @keyframes blink {
+      50% { opacity: 0; }
+    }
+
+    /* ── response buttons ── */
+    .response {
+      margin-top: 1.8rem;
+      display: flex;
+      gap: 1rem;
+      opacity: 0;
+      transition: opacity 0.6s ease;
+    }
+    .response.visible { opacity: 1; }
+
+    .btn {
+      font-family: 'Caveat', cursive;
+      font-size: 1.25rem;
+      padding: 0.5rem 2rem;
+      border-radius: 28px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: none;
+    }
+    .btn-yes {
+      background: #c46b6b;
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(196, 107, 107, 0.35);
+    }
+    .btn-yes:hover {
+      background: #b35858;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(196, 107, 107, 0.45);
+    }
+    .btn-no {
+      background: transparent;
+      color: #a09080;
+      border: 1px solid rgba(160, 144, 128, 0.4);
+    }
+
+    /* ══════════ CELEBRATION ══════════ */
+    .celebration {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 0.6rem;
+    }
+    .celebration.visible { display: flex; }
+
+    .celeb-icon {
+      font-size: 2.6rem;
+      animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+    }
+    .celeb-msg {
+      font-family: 'Caveat', cursive;
+      font-size: 2rem;
+      color: #9b6060;
+      opacity: 0;
+      animation: fadeIn 0.8s ease forwards 0.3s;
+    }
+    .celeb-sub {
+      font-size: 0.95rem;
+      color: #a09080;
+      font-weight: 300;
+      opacity: 0;
+      animation: fadeIn 0.8s ease forwards 0.8s;
+    }
+
+    @keyframes popIn {
+      0% { transform: scale(0) rotate(-20deg); opacity: 0; }
+      100% { transform: scale(1) rotate(0deg); opacity: 1; }
+    }
+    @keyframes fadeIn { to { opacity: 1; } }
+
+    /* ── falling petals ── */
+    .petal {
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      pointer-events: none;
+      z-index: 50;
+      opacity: 0;
+      animation: petalFall linear forwards;
+    }
+    .petal::before {
+      content: '';
+      display: block;
+      width: 100%;
+      height: 100%;
+      background: #d4a0a0;
+      border-radius: 50% 0 50% 50%;
+      transform: rotate(45deg);
+    }
+    @keyframes petalFall {
+      0%   { opacity: 0; transform: translateY(-20px) rotate(0deg); }
+      10%  { opacity: 0.7; }
+      100% { opacity: 0; transform: translateY(100vh) rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- SCENE 1: Envelope -->
+  <div class="envelope-scene" id="envelopeScene">
+    <div class="envelope" id="envelope" onclick="openEnvelope()">
+      <div class="envelope-body">
+        <div class="liner"></div>
+        <div class="seal"></div>
+      </div>
+      <div class="flap"></div>
+    </div>
+    <div class="hint">tap to open</div>
+  </div>
+
+  <!-- SCENE 2: The Letter -->
+  <div class="letter-scene" id="letterScene">
+    <div class="paper">
+      <div id="noteContent"></div>
+      <div class="response" id="response">
+        <button class="btn btn-yes" onclick="sayYes()">Yes!</button>
+        <button class="btn btn-no" id="noBtn">Not sure yet</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCENE 3: Celebration -->
+  <div class="celebration" id="celebration">
+    <div class="celeb-icon">🤍</div>
+    <div class="celeb-msg">Best. Answer. Ever.</div>
+    <div class="celeb-sub">Now I'm smiling like an idiot. Thank you.</div>
+  </div>
+
+  <script>
+    // ── letter lines to type out ──
+    const lines = [
+      { text: "Hey you,", cls: "note-greeting" },
+      { text: "This isn't a grand gesture or anything —", cls: "note-line" },
+      { text: "just me, a little nervous, asking a simple question.", cls: "note-line" },
+      { text: "You're my favorite person to do nothing with.", cls: "note-line" },
+      { text: "And I'd really love it if...", cls: "note-line" },
+      { text: "You'd be my Valentine? ♡", cls: "note-question" },
+    ];
+
+    // ── open envelope → show letter ──
+    function openEnvelope() {
+      const scene = document.getElementById('envelopeScene');
+      const flap = scene.querySelector('.flap');
+      flap.style.transform = 'rotateX(180deg)';
+
+      setTimeout(() => {
+        scene.classList.add('hidden');
+        const letterScene = document.getElementById('letterScene');
+        letterScene.classList.add('visible');
+        setTimeout(() => typeLetter(), 600);
+      }, 700);
+    }
+
+    // ── typewriter effect ──
+    let lineIdx = 0;
+    const container = document.getElementById('noteContent');
+
+    function typeLetter() {
+      if (lineIdx >= lines.length) {
+        // remove cursor, show buttons
+        const cursors = container.querySelectorAll('.cursor-blink');
+        cursors.forEach(c => c.remove());
+        setTimeout(() => {
+          document.getElementById('response').classList.add('visible');
+        }, 400);
+        return;
+      }
+
+      const { text, cls } = lines[lineIdx];
+      const el = document.createElement('div');
+      el.className = cls;
+      container.appendChild(el);
+
+      const cursor = document.createElement('span');
+      cursor.className = 'cursor-blink';
+      el.appendChild(cursor);
+
+      let charIdx = 0;
+      const speed = 40 + Math.random() * 15;
+
+      function typeChar() {
+        if (charIdx < text.length) {
+          el.insertBefore(document.createTextNode(text[charIdx]), cursor);
+          charIdx++;
+          setTimeout(typeChar, speed);
+        } else {
+          cursor.remove();
+          lineIdx++;
+          setTimeout(typeLetter, 350);
+        }
+      }
+      typeChar();
+    }
+
+    // ── "yes" celebration ──
+    function sayYes() {
+      document.getElementById('letterScene').style.display = 'none';
+      document.getElementById('celebration').classList.add('visible');
+      dropPetals();
+    }
+
+    // ── playful "no" button ──
+    const noBtn = document.getElementById('noBtn');
+    const noTexts = ["You sure? 🥺", "Think again...", "C'mon...", "One more try?", "Please? ♡", "I'll wait..."];
+    let noIdx = 0;
+    noBtn.addEventListener('click', () => {
+      noBtn.textContent = noTexts[noIdx % noTexts.length];
+      noIdx++;
+      const dx = (Math.random() - 0.5) * 80;
+      const dy = (Math.random() - 0.5) * 16;
+      noBtn.style.transform = `translate(${dx}px, ${dy}px)`;
+      noBtn.style.transition = 'transform 0.35s ease';
+    });
+
+    // ── petal shower ──
+    function dropPetals() {
+      for (let i = 0; i < 25; i++) {
+        const petal = document.createElement('div');
+        petal.classList.add('petal');
+        petal.style.left = Math.random() * 100 + '%';
+        petal.style.animationDuration = (3 + Math.random() * 3) + 's';
+        petal.style.animationDelay = (Math.random() * 2) + 's';
+        const size = 6 + Math.random() * 8;
+        petal.style.width = size + 'px';
+        petal.style.height = size + 'px';
+        const hue = 340 + Math.random() * 30;
+        petal.querySelector?.('::before')?.style;
+        petal.style.setProperty('--c', `hsl(${hue}, 50%, 72%)`);
+        document.body.appendChild(petal);
+      }
+    }
+  </script>
+</body>
+</html>
